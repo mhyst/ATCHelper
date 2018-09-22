@@ -91,6 +91,12 @@ public class ATCHelperFrame extends javax.swing.JFrame {
         jPanel6 = new javax.swing.JPanel();
         jScrollPane5 = new javax.swing.JScrollPane();
         tblAviones = new javax.swing.JTable();
+        jLabel7 = new javax.swing.JLabel();
+        tfVuelosAirport = new javax.swing.JTextField();
+        btnFiltrar = new javax.swing.JButton();
+        btnVuelosTodos = new javax.swing.JButton();
+        jLabel8 = new javax.swing.JLabel();
+        tfFilterDistance = new javax.swing.JTextField();
         jPanel7 = new javax.swing.JPanel();
         jScrollPane6 = new javax.swing.JScrollPane();
         tblATC = new javax.swing.JTable();
@@ -353,21 +359,60 @@ public class ATCHelperFrame extends javax.swing.JFrame {
             tblAviones.getColumnModel().getColumn(10).setPreferredWidth(50);
         }
 
+        jLabel7.setText("Filtrar por aeropuerto");
+
+        btnFiltrar.setText("Filtrar");
+        btnFiltrar.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnFiltrarActionPerformed(evt);
+            }
+        });
+
+        btnVuelosTodos.setText("Mostrar todos");
+        btnVuelosTodos.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnVuelosTodosActionPerformed(evt);
+            }
+        });
+
+        jLabel8.setText("Distancia máx. (m)");
+
         javax.swing.GroupLayout jPanel6Layout = new javax.swing.GroupLayout(jPanel6);
         jPanel6.setLayout(jPanel6Layout);
         jPanel6Layout.setHorizontalGroup(
             jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel6Layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane5, javax.swing.GroupLayout.DEFAULT_SIZE, 1331, Short.MAX_VALUE)
+                .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jScrollPane5, javax.swing.GroupLayout.DEFAULT_SIZE, 1331, Short.MAX_VALUE)
+                    .addGroup(jPanel6Layout.createSequentialGroup()
+                        .addComponent(jLabel7)
+                        .addGap(18, 18, 18)
+                        .addComponent(tfVuelosAirport, javax.swing.GroupLayout.PREFERRED_SIZE, 117, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(40, 40, 40)
+                        .addComponent(jLabel8)
+                        .addGap(18, 18, 18)
+                        .addComponent(tfFilterDistance, javax.swing.GroupLayout.PREFERRED_SIZE, 117, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(btnVuelosTodos, javax.swing.GroupLayout.PREFERRED_SIZE, 182, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(btnFiltrar, javax.swing.GroupLayout.PREFERRED_SIZE, 137, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addContainerGap())
         );
         jPanel6Layout.setVerticalGroup(
             jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel6Layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane5, javax.swing.GroupLayout.PREFERRED_SIZE, 517, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(208, Short.MAX_VALUE))
+                .addComponent(jScrollPane5, javax.swing.GroupLayout.PREFERRED_SIZE, 583, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(18, 18, 18)
+                .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel7)
+                    .addComponent(tfVuelosAirport, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(btnFiltrar)
+                    .addComponent(btnVuelosTodos)
+                    .addComponent(jLabel8)
+                    .addComponent(tfFilterDistance, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap(84, Short.MAX_VALUE))
         );
 
         jTabbedPane1.addTab("Vuelos Cercanos", jPanel6);
@@ -580,6 +625,26 @@ public class ATCHelperFrame extends javax.swing.JFrame {
         }
         tfAirportOutput.setText(res);
     }//GEN-LAST:event_btnAirportSearchActionPerformed
+
+    private void btnFiltrarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnFiltrarActionPerformed
+        String airport = tfVuelosAirport.getText();
+        String distancia = tfFilterDistance.getText();
+        String filtro = "";
+        if (airport.trim().length() == 4) {
+            filtro += "6="+airport+",7="+airport+",";
+        }
+        if (distancia.trim().length() > 0) {
+            filtro += "-1="+distancia;
+        }
+        System.out.println("Filtrando: "+filtro);
+        is.setFilter(filtro);
+        is.refresh();
+    }//GEN-LAST:event_btnFiltrarActionPerformed
+
+    private void btnVuelosTodosActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnVuelosTodosActionPerformed
+        is.setFilter("");
+        is.refresh();
+    }//GEN-LAST:event_btnVuelosTodosActionPerformed
 
     public JTextArea getOutput() {
         return txtOut;
@@ -835,12 +900,16 @@ public class ATCHelperFrame extends javax.swing.JFrame {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnAirportSearch;
     private javax.swing.JButton btnCargarVuelos;
+    private javax.swing.JButton btnFiltrar;
+    private javax.swing.JButton btnVuelosTodos;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel5;
     private javax.swing.JLabel jLabel6;
+    private javax.swing.JLabel jLabel7;
+    private javax.swing.JLabel jLabel8;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel3;
@@ -863,12 +932,14 @@ public class ATCHelperFrame extends javax.swing.JFrame {
     private javax.swing.JTable tblAviones;
     private javax.swing.JTextField tfAirportICAO;
     private javax.swing.JTextField tfAirportOutput;
+    private javax.swing.JTextField tfFilterDistance;
     private javax.swing.JTextField tfSearchCallsign;
     private javax.swing.JTextField tfSearchDestino;
     private javax.swing.JTextField tfSearchFechafin;
     private javax.swing.JTextField tfSearchFechaini;
     private javax.swing.JButton tfSearchLimpiar;
     private javax.swing.JTextField tfSearchOrigen;
+    private javax.swing.JTextField tfVuelosAirport;
     private javax.swing.JTextArea txtOut;
     // End of variables declaration//GEN-END:variables
 }

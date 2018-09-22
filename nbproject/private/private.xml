@@ -3,13 +3,12 @@
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
-            <file>file:/home/mhyst/NetBeansProjects/ATCHelper/src/atchelper/inforender/TableHandler.java</file>
+            <file>file:/home/mhyst/NetBeansProjects/ATCHelper/src/mvc/Model.java</file>
+            <file>file:/home/mhyst/NetBeansProjects/ATCHelper/src/mvc/Vista.java</file>
             <file>file:/home/mhyst/NetBeansProjects/ATCHelper/src/atchelper/ATCHelperFrame.java</file>
-            <file>file:/home/mhyst/NetBeansProjects/ATCHelper/src/atchelper/Vuelo.java</file>
-            <file>file:/home/mhyst/NetBeansProjects/ATCHelper/src/atchelper/FlightPlan.java</file>
+            <file>file:/home/mhyst/NetBeansProjects/ATCHelper/src/test/TestVista.java</file>
+            <file>file:/home/mhyst/NetBeansProjects/ATCHelper/src/mvc/ModelHandler.java</file>
             <file>file:/home/mhyst/NetBeansProjects/ATCHelper/src/ivao/IvaoServer.java</file>
-            <file>file:/home/mhyst/NetBeansProjects/ATCHelper/src/database/Database.java</file>
-            <file>file:/home/mhyst/NetBeansProjects/ATCHelper/src/http/HttpAirportInfo.java</file>
         </group>
     </open-files>
 </project-private>

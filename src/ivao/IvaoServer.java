@@ -7,12 +7,9 @@ package ivao;
 
 import atchelper.ATCHelperFrame;
 import atchelper.Vuelo;
-import java.awt.List;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Stack;
 import java.util.logging.Level;
@@ -30,7 +27,8 @@ public class IvaoServer implements Runnable {
     private String inbuff;
     private String outbuff;
     private HashMap<String, Metar> metar;
-    private HashMap<String, FlightData> aviones;
+    //private HashMap<String, FlightData> aviones;
+    private mvc.ModelHandler aviones;
     private Stack<String> commands;
     private Thread t;
     private int idMetar;
@@ -38,6 +36,9 @@ public class IvaoServer implements Runnable {
     private BufferedWriter bout;
     private long boutid;
     private String dependencia;
+    private mvc.Vista vista;
+    private static double longitud = 0;
+    private static double latitud = 0;
     
     private static final int CMD_METAR = 0;
     private static final int CMD_FLIGHT_MOVES = 1;
@@ -52,6 +53,7 @@ public class IvaoServer implements Runnable {
     private static final int CMD_ATC_EXIT = 10;
     private static final int CMD_FLIGHT_CONNECTS = 11;
     private static final int CMD_FLIGHT_APPEARS = 12;
+    private static final int CMD_INIT_POS = 13;
     
     public IvaoServer(ATCHelperFrame frm) {
         idMetar = 0;
@@ -59,7 +61,12 @@ public class IvaoServer implements Runnable {
         dependencia="";
         commands = new Stack();
         metar = new HashMap<String, Metar>();
-        aviones = new HashMap<String, FlightData>();
+        //aviones = new HashMap<String, FlightData>();
+        aviones = new mvc.ModelHandler();
+        String[] fields = {"callsign","squawk","longitud","latitud","altitud","velocidad","origen","destino","piloto","vid","asum"};
+        int[] reciprocidadVista = {0,1,2,3,4,5,6,7,8,9,10};
+        vista = new mvc.Vista("Aviones",fields,reciprocidadVista,aviones,frm.getTableAviones());
+        aviones.setVista(vista);
         inbuff = "";
         outbuff = "";
         String[] connData = {"185.34.216.31", "6809", "6809"};
@@ -89,14 +96,22 @@ public class IvaoServer implements Runnable {
         }
     }
     
+    public void setFilter(String filter) {
+        vista.setFilters(filter);
+    }
+    
+    public void refresh() {
+        vista.loadFromModelHandler();
+    }
+    
     public String getFpl(String callsign) {
-        FlightData fd = aviones.get(callsign);
+        FlightData fd = (FlightData) aviones.get(callsign);
         
         return fd.getFpl();            
     }
     
     public int getIdCommand(String command) {
-        String[] COMMANDS = {"&DSERVER", "@N:", "@S:", "$FP", "#DP", "!SSERVER", "=A", "=R", "$CR", "#TM", "#DA", "#AP", "=C"};
+        String[] COMMANDS = {"&DSERVER", "@N:", "@S:", "$FP", "#DP", "!SSERVER", "=A", "=R", "$CR", "#TM", "#DA", "#AP", "=C", "%"};
         /**
          * &DSERVER - Información METAR
          * @N:      Seguimiento de aviones en movimiento
@@ -141,8 +156,8 @@ public class IvaoServer implements Runnable {
         
         // Si se trata de algo que va del cliente al servidor lo descartamos
         // al menos por ahora
-        if (msg.startsWith(">"))
-            return;
+        //if (msg.startsWith(">"))
+        //    return;
         
         // Extraemos el comando completo y lo dividimos en sus partes
         String command = msg.substring(2);
@@ -150,7 +165,7 @@ public class IvaoServer implements Runnable {
         String[] parms = command.split(":");
         
         // Obtenemos el modelo de la tabla de aviones
-        DefaultTableModel taviones = (DefaultTableModel) frm.getTableAviones().getModel();
+        //DefaultTableModel taviones = (DefaultTableModel) frm.getTableAviones().getModel();
         
         // Variables de datos
         String callsign;
@@ -186,7 +201,7 @@ public class IvaoServer implements Runnable {
             case CMD_FLIGHT_STOPS:
                 //DefaultTableModel taviones = (DefaultTableModel) frm.getTableAviones().getModel();
                 callsign = parms[1];
-                fd = aviones.get(callsign);
+                fd = (FlightData) aviones.get(callsign);
                 if (fd == null) {
                     fd = new FlightData(idAvion, callsign, parms[2],
                                         Integer.parseInt(parms[3]),
@@ -194,10 +209,10 @@ public class IvaoServer implements Runnable {
                                         Integer.parseInt(parms[6]),Integer.parseInt(parms[7]),
                                         parms[8],Integer.parseInt(parms[9]));
                     aviones.put(callsign, fd);
-                    taviones.addRow(fd.getRow());
+                    //taviones.addRow(fd.getRow());
                     //if (command.startsWith("@S:"))
                     //    frm.getTableAviones().set
-                    fd.setId(taviones.getRowCount()-1);
+                    //fd.setId(taviones.getRowCount()-1);
                     //idAvion++ ;
                 } else {
                     fd.setSq(parms[2]);
@@ -206,29 +221,31 @@ public class IvaoServer implements Runnable {
                     fd.setLatitud(Double.parseDouble(parms[5]));
                     fd.setHeight(Integer.parseInt(parms[6]));
                     fd.setSpeed(Integer.parseInt(parms[7]));
-                    if (taviones.getRowCount() <= fd.getId())
-                        return;
+                    /*if (taviones.getRowCount() <= fd.getId())
+                        return;*/
                     fd.setN2(parms[8]);
                     fd.setN3(Integer.parseInt(parms[9]));
-                    taviones.setValueAt(fd.getSq(),fd.getId(),1);
+                    vista.receiveUpdate(fd);
+                    /*taviones.setValueAt(fd.getSq(),fd.getId(),1);
                     taviones.setValueAt(fd.getLongitud(),fd.getId(),2);
                     taviones.setValueAt(fd.getLatitud(),fd.getId(),3);
                     taviones.setValueAt(fd.getHeight(),fd.getId(),4);
-                    taviones.setValueAt(fd.getSpeed(),fd.getId(),5);
+                    taviones.setValueAt(fd.getSpeed(),fd.getId(),5);*/
                     //taviones.setValueAt(fd.getNombrePiloto(),fd.getId(),6);
                 }
                 break;
             case CMD_FLIGHT_PLAN:
                 callsign = parms[0].substring(3);
-                fd = aviones.get(callsign);
+                fd = (FlightData) aviones.get(callsign);
                 if (fd != null) {
                     fd.setFpl(command);
-                    taviones.setValueAt(fd.getOrigin(),fd.getId(),6);
+                    vista.receiveUpdate(fd);
+                    //taviones.setValueAt(fd.getOrigin(),fd.getId(),6);
                     //String airportName = http.HttpAirportInfo.query(fd.getDestination());
                     //if (airportName != null) {
                     //       taviones.setValueAt(fd.getDestination()+"("+airportName+")",fd.getId(),7);
                     //} else {
-                        taviones.setValueAt(fd.getDestination(),fd.getId(),7);
+                    //    taviones.setValueAt(fd.getDestination(),fd.getId(),7);
                     //}
                 }
                 break;
@@ -239,16 +256,16 @@ public class IvaoServer implements Runnable {
                     return;
                 }*/
                 callsign = parms[0].substring(3);
-                fd = aviones.get(callsign);
+                fd = (FlightData) aviones.get(callsign);
                 if (fd != null) {
                     System.out.println("Avion "+fd.getCallsign()+" eliminado: "+command);
-                    taviones.removeRow(fd.getId());
-                    taviones.fireTableRowsDeleted(fd.getId(), fd.getId());
+                    //taviones.removeRow(fd.getId());
+                    //taviones.fireTableRowsDeleted(fd.getId(), fd.getId());
                     aviones.remove(callsign);
                     int i = 0;
-                    while (i < taviones.getRowCount()) {
+                    //while (i < taviones.getRowCount()) {
                     //for(int i = 0; i < taviones.getRowCount(); i++) {
-                        try {
+                        /*try {
                             callsign = (String) taviones.getValueAt(i, 0);
                             fd = aviones.get(callsign);
                             if (fd != null) {
@@ -256,7 +273,7 @@ public class IvaoServer implements Runnable {
                             }
                             i++;
                         } catch (Exception e) {}
-                    }
+                    }*/
                 }
                 break;
             case CMD_INIT:
@@ -268,19 +285,21 @@ public class IvaoServer implements Runnable {
             case CMD_ASSUME:
                 callsign = parms[1];
                 dependenciaAsumido = parms[0].substring(2);
-                fd = aviones.get(callsign);
+                fd = (FlightData) aviones.get(callsign);
                 if (fd != null) {
                     fd.setAssumed(true, dependenciaAsumido);
-                    taviones.setValueAt(fd.getDependenciaAsumido(), fd.getId(), 10);
+                    vista.receiveUpdate(fd);
+                    //taviones.setValueAt(fd.getDependenciaAsumido(), fd.getId(), 10);
                 }
                 break;
             case CMD_RELEASE:
                 callsign = parms[1];
                 dependenciaAsumido = parms[0].substring(2);
-                fd = aviones.get(callsign);
+                fd = (FlightData) aviones.get(callsign);
                 if (fd != null) {
                     fd.setAssumed(false, "");
-                    taviones.setValueAt(fd.getDependenciaAsumido(), fd.getId(), 10);
+                    vista.receiveUpdate(fd);
+                    //taviones.setValueAt(fd.getDependenciaAsumido(), fd.getId(), 10);
                     if (dependenciaAsumido.equals(dependencia)) {
                         database.Database.insertVuelo(fd.getVuelo());
                     }
@@ -295,16 +314,17 @@ public class IvaoServer implements Runnable {
                     obj[1] = parms[3];
                     latc.addRow(obj);
                 } else {
-                    fd = aviones.get(callsign);
+                    fd = (FlightData) aviones.get(callsign);
                     if (fd == null)
                         return;
                     if (msg.contains(":RN:")) {
                         fd.setNombrePiloto(parms[3]);
-                        taviones.setValueAt(fd.getNombrePiloto(),fd.getId(),8);
+                        //taviones.setValueAt(fd.getNombrePiloto(),fd.getId(),8);
                     } else if (msg.contains(":RV:")) {
                         fd.setVid(parms[3]);
-                        taviones.setValueAt(fd.getVid(),fd.getId(),9);
+                        //taviones.setValueAt(fd.getVid(),fd.getId(),9);
                     }
+                    vista.receiveUpdate(fd);
                 }
                 break;
             case CMD_ATC_EXIT:
@@ -319,6 +339,16 @@ public class IvaoServer implements Runnable {
                         }
                     }
                 }
+            case CMD_INIT_POS:
+                if(longitud == 0 && latitud == 0) {
+                    String dep = parms[0].substring(1);
+                    if (dep.equals(dependencia)) {
+                        longitud = Double.parseDouble(parms[5]);
+                        latitud = Double.parseDouble(parms[6]);
+                        System.out.println("Posicion:"+longitud+", "+latitud);
+                    }
+                }
+                break;
 //            case CMD_FLIGHT_CONNECTS:
 //                callsign = parms[0].substring(3);
 //                fd = aviones.get(callsign);
@@ -337,7 +367,7 @@ public class IvaoServer implements Runnable {
     }
     
     public FlightData getAvion(String callsign) {
-       return aviones.get(callsign);
+       return (FlightData) aviones.get(callsign);
     }
     
     public void in(int data) {
@@ -426,7 +456,7 @@ public class IvaoServer implements Runnable {
         }
     }
     
-    public class FlightData {
+    public class FlightData extends mvc.Model {
         private int id;
         private String callsign;
         private String sq;
@@ -448,6 +478,7 @@ public class IvaoServer implements Runnable {
         public FlightData(int id, String callsign, String sq, int n1,
                           double longitud, double latitud, int height,
                           int speed, String n2, int n3) {
+            super(null);
             this.id = id;
             this.callsign = callsign;
             this.sq = sq;
@@ -625,6 +656,73 @@ public class IvaoServer implements Runnable {
             origin = parms[5];
             destination = parms[9];
         }
+
+        @Override
+        public void setRow(Object[] row) {
+            /**
+             *             Object[] row = new Object[11];
+            
+            row[0] = callsign;
+            row[1] = sq;
+            row[2] = longitud;
+            row[3] = latitud;
+            row[4] = height;
+            row[5] = speed;
+            row[6] = getOrigin();
+            row[7] = getDestination();
+            row[8] = nombrePiloto;
+            row[9] = vid;
+            row[10] = dependenciaAsumido;
+             */
+            
+            callsign = (String) row[0];
+            sq = (String) row[1];
+            longitud = (Double) row[2];
+            latitud = (Double) row[3];
+            height = (int) row[4];
+            speed = (int) row[5];
+            nombrePiloto = (String) row[8];
+            vid = (String) row[9];
+            dependenciaAsumido = (String) row[10];
+        }
+    }
+    
+    /**
+     * Calculate distance between two points in latitude and longitude taking
+     * into account height difference. If you are not interested in height
+     * difference pass 0.0. Uses Haversine method as its base.
+     * 
+     * lat1, lon1 Start point lat2, lon2 End point el1 Start altitude in meters
+     * el2 End altitude in meters
+     * @returns Distance in Meters
+     */
+    public static double distance(double lat1, double lat2, double lon1,
+            double lon2, double el1, double el2) {
+
+        final int R = 6371; // Radius of the earth
+
+        double latDistance = Math.toRadians(lat2 - lat1);
+        double lonDistance = Math.toRadians(lon2 - lon1);
+        double a = Math.sin(latDistance / 2) * Math.sin(latDistance / 2)
+                + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
+                * Math.sin(lonDistance / 2) * Math.sin(lonDistance / 2);
+        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        double distance = R * c * 1000; // convert to meters
+
+        double height = el1 - el2;
+
+        distance = Math.pow(distance, 2) + Math.pow(height, 2);
+
+        return Math.sqrt(distance);
+    }    
+    
+    public static boolean isInDistance(FlightData f, double dist) {
+        if (longitud == 0 && latitud == 0)
+            return true;
+        
+        double d = distance(latitud,f.getLatitud(),longitud,f.getLongitud(),0,f.getHeight()/3.2808);
+        
+        return d <= dist*1000;
     }
     
 }

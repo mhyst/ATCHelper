@@ -5,6 +5,9 @@
  */
 package mvc;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+
 /**
  *
  * @author mhyst
@@ -12,9 +15,13 @@ package mvc;
 public abstract class Model {
     private int id;
     private String[] fields;
+    private ArrayList<Vista> vistas;
+    private final HashMap<String, Integer> vistaID;
     
     public Model(String[] fields) {
         this.fields = fields;
+        vistas = new ArrayList<>();
+        vistaID = new HashMap<>();
     }
     
     public String[] getFields() {
@@ -47,9 +54,10 @@ public abstract class Model {
     
     public void set(int id, Object value) {
         Object[] values = getRow();
-        if (id > 0 && id < values.length)
+        if (id >= 0 && id < values.length)
             values[id] = value;
         setRow(values);
+        notifyUpdate();
     }
     
     public void set(String field, Object value) {
@@ -58,8 +66,29 @@ public abstract class Model {
         if (id > 0 && id < values.length)
             values[id] = value;
         setRow(values);
+        notifyUpdate();
     }
     
     public abstract Object[] getRow();
     public abstract void setRow(Object[] row);
+    
+    public void notifyUpdate() {
+        for (Vista v : vistas) {
+            v.receiveUpdate(this);
+        }
+    }
+    
+    public void addVista(Vista v, int id) {
+        vistas.add(v);
+        vistaID.put(v.getNombre(), id);
+    }
+    
+    public int getVistaId(Vista v) {
+        return vistaID.get(v);
+    }
+    
+    public void removeVista(Vista v) {
+        vistas.remove(v);
+        vistaID.remove(v.getNombre());
+    }
 }
